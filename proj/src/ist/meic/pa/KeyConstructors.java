@@ -4,7 +4,7 @@ import javassist.*;
 
 public class KeyConstructors {
 	public static void main(String[] args){
-		Translator translator = new ConstructorTranslator(); //creates a translator for modifying constructors
+		Translator translator = new KeywordTranslator(); //creates a translator for modifying constructors
 		ClassPool pool = ClassPool.getDefault(); //gets classes
 		Loader classLoader = new Loader();
 		try {
