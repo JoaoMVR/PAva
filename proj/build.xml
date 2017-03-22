@@ -1,0 +1,21 @@
+<project name="KeyConstructors">
+
+  <target name="init">
+    <mkdir dir="classes"/>
+  </target>
+
+  <target name="clean">
+    <delete includeEmptyDirs="true">
+      <fileset dir="classes" includes="**/*"/>
+    </delete>
+  </target>
+
+  <target name="compile">
+    <javac srcdir="src" 
+           classpath="./javassist.jar"
+           destdir="classes"
+           debug="true"
+           includeAntRuntime="false"/>
+  </target>
+
+</project>
