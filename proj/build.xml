@@ -10,12 +10,18 @@
     </delete>
   </target>
 
-  <target name="compile">
-    <javac srcdir="src" 
-           classpath="./javassist.jar"
+  <target name="build">
+    <javac srcdir="src:Tests"
+           classpath="javassist.jar"
            destdir="classes"
            debug="true"
            includeAntRuntime="false"/>
+  </target>
+
+  <target name="run">
+    <java classpath="classes:javassist.jar"
+          classname="KeyConstructors"
+          fork="true"/>
   </target>
 
 </project>
