@@ -1,0 +1,17 @@
+* Doubts
+- [X] javassist in our jar? :: yes
+- [X] inheritance
+  - [X] default keywords overriding -- yes
+  - [X] keywords acessing fields of superclasses ::
+    (should be similar to std java constructors)
+- [X] keywords that reference each other ::
+     we decide on the semantics of that
+- [X] annotation with empty string :: no problem, should work
+- [X] keywords possible types :: everything
+
+
+* Extensions proposals
+** Methods with keyword arguments
+** Constructors and methods with bodies
+** Good performance
+
