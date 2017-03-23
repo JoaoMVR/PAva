@@ -1,8 +1,8 @@
 public class TestF {
 	public static void main(String[] args) {
-		System.err.println(new KeyPlaces());
-		System.err.println(new KeyVisited());
-		System.err.println(new KeyVisited("visited", 2, "second", "Yharnam"));
-		System.err.println(new KeyVisited("third", "Pthumerian"));
+		System.out.println(new KeyPlaces());
+		System.out.println(new KeyVisited());
+		System.out.println(new KeyVisited("visited", 2, "second", "Yharnam"));
+		System.out.println(new KeyVisited("third", "Pthumerian"));
 	}
 }
