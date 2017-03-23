@@ -29,6 +29,10 @@ public class KeywordTranslator implements Translator {
         }
     }
 
+    //==========================================================================
+    // Private methods
+    //==========================================================================
+
     // FIXME: This should be decoupled from the translator so that we can debug
     // the generated code by hand.
     // FIXME: Missing documentation.
@@ -125,7 +129,7 @@ public class KeywordTranslator implements Translator {
      * @throws NotFoundException
      * @throws ClassNotFoundException
      */
-    private List<String> defaultAssignments(KeywordArgs annotation, CtClass ctClass) 
+    private List<String> defaultAssignments(KeywordArgs annotation, CtClass ctClass)
         throws NotFoundException, ClassNotFoundException {
         // FIXME:TODO
         List<String> keywords = processAnnotation(annotation);
@@ -133,7 +137,7 @@ public class KeywordTranslator implements Translator {
         return keywords;
     }
 
-    private void parentAssignments(CtClass ctClass, List<String> keywords) 
+    private void parentAssignments(CtClass ctClass, List<String> keywords)
         throws NotFoundException, ClassNotFoundException {
 
         // FIXME: What about interfaces?
@@ -160,22 +164,21 @@ public class KeywordTranslator implements Translator {
      * Checks whether the start of a keyword has already been seen. For
      * instance: If you have "height=10" in the subclass and "height=20" in
      * the superclass, the last one should be ignored.
-     *     
+     *
      * So, if the start of a keyword in a super class hasn't been seen before in
      * the list of keywords, then it can be added.
      */
     private void checkDuplicates(List<String> keywords, List<String> superKeywords) {
         boolean controlVariable;
-        String[] splitString;
 
-        for(String superKeyword : superKeywords) {
+        for (String superKeyword : superKeywords) {
             controlVariable = true;
 
-            for(String keyword : keywords) {
-                splitString = superKeyword.split("=");
+            for (String keyword : keywords) {
+                String[] splitString = superKeyword.split("=");
 
-                if(splitString.length != 1) //Case of single parameter without "=", "aka", "margin"
-                    if(keyword.startsWith(splitString[0])) {
+                if (splitString.length != 1) // Case of single parameter without "=", "aka", "margin"
+                    if (keyword.startsWith(splitString[0])) {
                         controlVariable = false;
                         break;
                     }
@@ -188,7 +191,7 @@ public class KeywordTranslator implements Translator {
     }
 
     /**
-     * Gets the default keyword assignments given in the annotation. 
+     * Gets the default keyword assignments given in the annotation.
      *
      * For instance, if the annotation is the following
      *
@@ -203,7 +206,7 @@ public class KeywordTranslator implements Translator {
      *
      * TODO: Check if this works in cases where ',' or '=' appear inside a
      * string literal.
-     * 
+     *
      */
     private List<String> processAnnotation(final KeywordArgs annotation) {
         final List<String> keywords    = new ArrayList<>();
