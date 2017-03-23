@@ -89,6 +89,7 @@ public class KeywordTranslator implements Translator {
     //          3. This doesn't handle keywords that reference each other.
     //          4. Doesn't handle empty keywords.
     //          5. Doesn't handle inheritance.
+    //			6. Doesn't verify args size, which has to be even
     private String makeTemplate(ArrayList<String> defaultAssignments) {
         String template = "{\n";
 
@@ -108,13 +109,21 @@ public class KeywordTranslator implements Translator {
             + "            field.setAccessible(true);" +                                      "\n"
             + "            field.set($0, value);" +                                           "\n"
             + "        } catch (NoSuchFieldException e) {" +                                  "\n"
-            + "            throw new RuntimeException(\"Unrecognized keyword: \" + kword);" + "\n"
+            + "			   try{" +															  "\n"
+            + "            	   final java.lang.reflect.Field field = " +                      "\n"
+            + "                		$0.getClass().getSuperClass().getDeclaredField(kword);" + "\n"
+            + "           			field.setAccessible(true);" +                             "\n"
+            + "         			field.set($0, value);" +                                  "\n"
+            + "           } catch(NoSuchFieldException e) {" +								  "\n"
+            + "		   		throw new RuntimeException(\"Unrecognized keyword: \" + kword);" +"\n"
+            + "			  }" +																  "\n"
             + "        } catch (Exception e) {" +                                             "\n"
             + "            throw new RuntimeException(e);" +                                  "\n"
             + "        }" +                                                                   "\n"
             + "    }" +                                                                       "\n";
 
         template += "}";
+        System.out.println(template);
         return template;
     }
 
@@ -196,8 +205,6 @@ public class KeywordTranslator implements Translator {
     			keywords.add(split); //should add something like "height=10", for instance
     		}
     	}
-    	
     	return keywords;
     }
-
 }
