@@ -39,7 +39,11 @@ public class KeywordTranslator implements Translator {
             if (ctConstructor.getAnnotation(KeywordArgs.class) != null) {
                 final KeywordArgs ann =
                     (KeywordArgs) ctConstructor.getAnnotation(KeywordArgs.class);
-                treatAnnotations(ctConstructor, ann, ctClass);
+		
+		//adds new constructor for inheritance instantiations
+		ctClass.addConstructor(CtNewConstructor.defaultConstructor(ctClass));                
+
+		treatAnnotations(ctConstructor, ann, ctClass);
             }
         }
     }
