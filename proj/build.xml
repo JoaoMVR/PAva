@@ -11,11 +11,12 @@
   </target>
 
   <target name="build">
-    <javac srcdir="src:Tests"
-           classpath="javassist.jar"
-           destdir="classes"
-           debug="true"
-           includeAntRuntime="false"/>
+    <javac srcdir="src:Tests" destdir="classes" 
+           debug="true" includeAntRuntime="false">
+      <classpath>
+        <fileset dir="jar" includes="**/*.jar"/>
+      </classpath>
+    </javac>
   </target>
 
   <target name="run">
