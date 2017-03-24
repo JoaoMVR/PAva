@@ -1,3 +1,5 @@
+package ist.meic.pa;
+
 public class TestF {
 	public static void main(String[] args) {
 		System.out.println(new KeyPlaces());
