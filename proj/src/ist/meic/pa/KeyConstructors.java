@@ -15,7 +15,8 @@ public class KeyConstructors {
             System.err.println("Usage: java KeyConstructors <class>");
             System.exit(1);
         }
-
+/*
+<<<<<<< HEAD
         final Translator translator = new KeywordTranslator();
         final ClassPool pool        = ClassPool.getDefault();
         final Loader classLoader    = new Loader();
@@ -26,6 +27,13 @@ public class KeyConstructors {
         final String[] restArgs = new String[args.length - minArgCount];
         System.arraycopy(args, minArgCount, restArgs, 0, restArgs.length);
 
+=======*/
+        final String[] restArgs = new String[args.length - minArgCount];
+        System.arraycopy(args, minArgCount, restArgs, 0, restArgs.length);
+
+        final Loader classLoader = new Loader();
+        classLoader.addTranslator(ClassPool.getDefault(), new KeywordTranslator());
+// >>>>>>> process-annotations
         classLoader.run(args[0], restArgs);
     }
 

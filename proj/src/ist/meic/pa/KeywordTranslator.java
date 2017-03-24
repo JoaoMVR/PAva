@@ -4,7 +4,7 @@ import javassist.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.ArrayList;
+import java.util.*;
 
 public class KeywordTranslator implements Translator {
 
@@ -29,6 +29,10 @@ public class KeywordTranslator implements Translator {
         }
     }
 
+    //==========================================================================
+    // Private methods
+    //==========================================================================
+
     // FIXME: This should be decoupled from the translator so that we can debug
     // the generated code by hand.
     // FIXME: Missing documentation.
@@ -36,14 +40,14 @@ public class KeywordTranslator implements Translator {
         throws ClassNotFoundException, CannotCompileException, NotFoundException {
 
         for(CtConstructor ctConstructor: ctClass.getConstructors()) {
-            if (ctConstructor.getAnnotation(KeywordArgs.class) != null) {
+            if (ctConstructor.getAnnotation(KeywordArgs.class) instanceof KeywordArgs) {
                 final KeywordArgs ann =
                     (KeywordArgs) ctConstructor.getAnnotation(KeywordArgs.class);
-		
-		//adds new constructor for inheritance instantiations
-		ctClass.addConstructor(CtNewConstructor.defaultConstructor(ctClass));                
 
-		treatAnnotations(ctConstructor, ann, ctClass);
+                //adds new constructor for inheritance instantiations
+                ctClass.addConstructor(CtNewConstructor.defaultConstructor(ctClass));
+
+                treatAnnotations(ctConstructor, ann, ctClass);
             }
         }
     }
@@ -72,8 +76,8 @@ public class KeywordTranslator implements Translator {
      *           throw new RuntimeException("unsuported kword");
      *     }
      * Instantiate like: new Widget("height", 10, "width", 2)
-     * @throws NotFoundException 
-     * @throws ClassNotFoundException 
+     * @throws NotFoundException
+     * @throws ClassNotFoundException
      */
     private void treatAnnotations(CtConstructor ctConstructor, KeywordArgs annotation, CtClass ctClass)
         throws CannotCompileException, NotFoundException, ClassNotFoundException {
@@ -90,7 +94,7 @@ public class KeywordTranslator implements Translator {
     //          4. Doesn't handle empty keywords.
     //          5. Doesn't handle inheritance.
     //			6. Doesn't verify args size, which has to be even
-    private String makeTemplate(ArrayList<String> defaultAssignments) {
+    private String makeTemplate(List<String> defaultAssignments) {
         String template = "{\n";
 
         for (String da : defaultAssignments) {
@@ -138,80 +142,99 @@ public class KeywordTranslator implements Translator {
      * FIXME: Missing documentation.
      * defaultAssignments("width=100,height=50,margin") =
      *    ["width=100","height=50"]
-     * @throws NotFoundException 
-     * @throws ClassNotFoundException 
+     * @throws NotFoundException
+     * @throws ClassNotFoundException
      */
-    private ArrayList<String> defaultAssignments(KeywordArgs annotation, CtClass ctClass) throws NotFoundException, ClassNotFoundException {
+    private List<String> defaultAssignments(KeywordArgs annotation, CtClass ctClass)
+        throws NotFoundException, ClassNotFoundException {
         // FIXME:TODO
-        ArrayList<String> keywords = processAnnotation(annotation);
-    	
-    	parentAssignments(ctClass, keywords);
-    	
-    	return keywords;
+        List<String> keywords = processAnnotation(annotation);
+        parentAssignments(ctClass, keywords);
+        return keywords;
     }
-    
-    private void parentAssignments(CtClass ctClass, ArrayList<String> keywords) throws NotFoundException, ClassNotFoundException {
-    	
-    	if(ctClass.getName().equals("java.lang.Object")) {
-    		return;
-    	}
-    	
-    	else {
-    		ctClass = ctClass.getSuperclass();
-    		
-    		for(CtConstructor ctConstructor : ctClass.getConstructors()) {
-    			if(ctConstructor.hasAnnotation(KeywordArgs.class)) {
-    				final KeywordArgs annotation =
-    	                    (KeywordArgs) ctConstructor.getAnnotation(KeywordArgs.class);
-    				ArrayList<String> superKeywords = processAnnotation(annotation);
-    				
-    				checkDuplicates(keywords, superKeywords);
-    			}
-    		}
-    		
-    		parentAssignments(ctClass, keywords);
-    	}
+
+    private void parentAssignments(CtClass ctClass, List<String> keywords)
+        throws NotFoundException, ClassNotFoundException {
+
+        // FIXME: What about interfaces?
+        if(ctClass.getName().equals("java.lang.Object")) {
+            return;
+        } else {
+            ctClass = ctClass.getSuperclass();
+
+            for(CtConstructor ctConstructor : ctClass.getConstructors()) {
+                if(ctConstructor.hasAnnotation(KeywordArgs.class)) {
+                    final KeywordArgs annotation =
+                        (KeywordArgs) ctConstructor.getAnnotation(KeywordArgs.class);
+                    List<String> superKeywords = processAnnotation(annotation);
+
+                    checkDuplicates(keywords, superKeywords);
+                }
+            }
+
+            parentAssignments(ctClass, keywords);
+        }
     }
-    
-    private void checkDuplicates(ArrayList<String> keywords, ArrayList<String> superKeywords) {
-    	
-    	/*Checks whether the start of a keyword has already been seen. For instance:
-    	 If you have "height=10" in the subclass and "height=20" in the superclass, the last one
-    	 should be ignored.
-    	 
-    	 So, if the start of a superKeyword (keyword in a super class) hasn't been seen before
-    	 in the ArrayList of keywords, then it can be added.
-    	 */
-    	boolean controlVariable;
-    	String[] splitString;
-    	
-    	for(String superKeyword : superKeywords) {
-    		controlVariable = true;
-    		for(String keyword : keywords) {
-    			splitString = superKeyword.split("=");
-    			if(splitString.length != 1) //Case of single parameter without "=", "aka", "margin"
-	    			if(keyword.startsWith(splitString[0])) {
-	    				controlVariable = false;
-	    				break;
-	    			}
-    		}
-    		if(controlVariable) {
-    			keywords.add(superKeyword);
-    		}
-    	}
+
+    /**
+     * Checks whether the start of a keyword has already been seen. For
+     * instance: If you have "height=10" in the subclass and "height=20" in
+     * the superclass, the last one should be ignored.
+     *
+     * So, if the start of a keyword in a super class hasn't been seen before in
+     * the list of keywords, then it can be added.
+     */
+    private void checkDuplicates(List<String> keywords, List<String> superKeywords) {
+        boolean controlVariable;
+
+        for (String superKeyword : superKeywords) {
+            controlVariable = true;
+
+            for (String keyword : keywords) {
+                String[] splitString = superKeyword.split("=");
+
+                if (splitString.length != 1) // Case of single parameter without "=", "aka", "margin"
+                    if (keyword.startsWith(splitString[0])) {
+                        controlVariable = false;
+                        break;
+                    }
+            }
+
+            if(controlVariable) {
+                keywords.add(superKeyword);
+            }
+        }
     }
-    
-    private ArrayList<String> processAnnotation(KeywordArgs annotation) {
-    	ArrayList<String> keywords = new ArrayList<String>();
-        
-    	String annotationValue = annotation.value();
-    	String[] splitAnnotation = annotationValue.split(",");
-    	
-    	for(String split : splitAnnotation) {
-    		if(split.contains("=")) { //detects cases of just "margin", for instance
-    			keywords.add(split); //should add something like "height=10", for instance
-    		}
-    	}
-    	return keywords;
+
+
+    /**
+     * Gets the default keyword assignments given in the annotation.
+     *
+     * For instance, if the annotation is the following
+     *
+     *   @KeywordArgs("width=100,height=50,margin=5")
+     *
+     * then the resulting list should be
+     *
+     *   {"width=100","height=50"}.
+     *
+     * @param  annotation to be processed.
+     * @return list of keyword assignments of the form "keyword=value".
+     *
+     * TODO: Check if this works in cases where ',' or '=' appear inside a
+     * string literal.
+     *
+     */
+    private List<String> processAnnotation(final KeywordArgs annotation) {
+        final List<String> keywords    = new ArrayList<>();
+        final String[] splitAnnotation = annotation.value().split(",");
+
+        for (final String split : splitAnnotation) {
+            if (split.contains("=")) { // Then there exists a default value.
+                keywords.add(split);
+            }
+        }
+
+        return keywords;
     }
 }

@@ -1,4 +1,4 @@
-import ist.meic.pa.KeywordArgs;
+package ist.meic.pa;
 
 
 public class SuperExtendedWidget extends ExtendedWidget {
