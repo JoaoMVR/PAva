@@ -40,7 +40,7 @@ public class KeywordTranslator implements Translator {
         throws ClassNotFoundException, CannotCompileException, NotFoundException {
 
         for(CtConstructor ctConstructor: ctClass.getConstructors()) {
-            if (ctConstructor.getAnnotation(KeywordArgs.class) != null) {
+            if (ctConstructor.getAnnotation(KeywordArgs.class) instanceof KeywordArgs) {
                 final KeywordArgs ann =
                     (KeywordArgs) ctConstructor.getAnnotation(KeywordArgs.class);
 
