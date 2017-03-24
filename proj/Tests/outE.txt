@@ -1,2 +1,0 @@
-l: 10, b: 0, v :true
-l: 20000, b: 0, v :false

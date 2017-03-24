@@ -35,7 +35,7 @@ public class KeywordTranslator implements Translator {
         throws ClassNotFoundException, CannotCompileException {
 
         for(CtConstructor ctConstructor: ctClass.getConstructors()) {
-            if (ctConstructor.getAnnotation(KeywordArgs.class) != null) {
+            if (ctConstructor.getAnnotation(KeywordArgs.class) instanceof KeywordArgs) {
                 final KeywordArgs ann =
                     (KeywordArgs) ctConstructor.getAnnotation(KeywordArgs.class);
                 treatAnnotations(ctConstructor, ann);
@@ -118,7 +118,7 @@ public class KeywordTranslator implements Translator {
      */
     private String[] defaultAssignments(KeywordArgs annotation) {
         // FIXME:TODO
-        final String[] example = {"width=100","height=50"};
+        final String[] example = {"width=100","height=50","margin=5"};
         return example;
     }
 
