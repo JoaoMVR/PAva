@@ -109,20 +109,29 @@ public class KeywordTranslator implements Translator {
             + "            field.setAccessible(true);" +                                      "\n"
             + "            field.set($0, value);" +                                           "\n"
             + "        } catch (NoSuchFieldException e) {" +                                  "\n"
-            + "				try{" +															  "\n"
-            + "            	   final java.lang.reflect.Field field = " +                      "\n"
-            + "                		$0.getClass().getSuperclass().getDeclaredField(kword);" + "\n"
-            + "           			field.setAccessible(true);" +                             "\n"
-            + "         			field.set($0, value);" +                                  "\n"
-            + "           } catch(NoSuchFieldException e) {" +								  "\n"
-            + "		   		throw new RuntimeException(\"Unrecognized keyword: \" + kword);" +"\n"
-            + "			  } " +																  "\n"
+            + "				java.lang.Class superClass = $0.getClass().getSuperclass();"+	  "\n"
+            + "				while(superClass.getName() != \"java.lang.Object\") {" +		  "\n"
+            + "					try{" +														  "\n"
+            + "            	   		final java.lang.reflect.Field field = " +                 "\n"
+            + "                			superClass.getDeclaredField(kword);" + 				  "\n"
+            + "           			field.setAccessible(true);" +     	             	      "\n"
+            + "         			field.set($0, value);" +            	                  "\n"
+            + "						break;" +												  "\n"
+            + "           		} catch(NoSuchFieldException e) {" +						  "\n"
+            + "						superClass = superClass.getClass().getSuperclass();" +	  "\n"
+            + "						if(superClass.getName() != \"java.lang.Object\") continue;"+"\n"
+            + "						else {" +												  "\n"
+            + "		   					throw new RuntimeException(\"Unrecognized keyword: \" + kword);" +"\n"
+            + "						}" +													  "\n"
+            + "			  		}" +														  "\n"
+            + "				}" +															  "\n"
             + "        } catch (Exception e) {" +                                             "\n"
             + "            throw new RuntimeException(e);" +                                  "\n"
             + "        }" +                                                                   "\n"
             + "    }" +                                                                       "\n";
 
         template += "}";
+        System.out.println(template);
         return template;
     }
 
