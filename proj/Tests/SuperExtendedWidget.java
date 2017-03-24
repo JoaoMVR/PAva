@@ -1,10 +1,10 @@
 import ist.meic.pa.KeywordArgs;
 
 
-public class SuperExtendedWidget extends Widget {
+public class SuperExtendedWidget extends ExtendedWidget {
 	String superExtended;
 	
-	@KeywordArgs("width=200,margin=10,height=400, superExtended=\"YesIamSuperExtended")
+	@KeywordArgs("margin=10,height=400, superExtended=\"YesIamSuperExtended\" ")
 	public SuperExtendedWidget(Object... args){}
 	
 	public String toString() {

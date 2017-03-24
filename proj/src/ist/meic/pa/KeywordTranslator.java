@@ -109,7 +109,7 @@ public class KeywordTranslator implements Translator {
             + "            field.setAccessible(true);" +                                      "\n"
             + "            field.set($0, value);" +                                           "\n"
             + "        } catch (NoSuchFieldException e) {" +                                  "\n"
-            + "				java.lang.Class superClass = $0.getClass().getSuperclass();"+	  "\n"
+            + "	            java.lang.Class superClass = $0.getClass().getSuperclass();"+	  "\n"
             + "				while(superClass.getName() != \"java.lang.Object\") {" +		  "\n"
             + "					try{" +														  "\n"
             + "            	   		final java.lang.reflect.Field field = " +                 "\n"
@@ -118,7 +118,7 @@ public class KeywordTranslator implements Translator {
             + "         			field.set($0, value);" +            	                  "\n"
             + "						break;" +												  "\n"
             + "           		} catch(NoSuchFieldException e) {" +						  "\n"
-            + "						superClass = superClass.getClass().getSuperclass();" +	  "\n"
+            + "						superClass = superClass.getSuperclass();" +	  "\n"
             + "						if(superClass.getName() != \"java.lang.Object\") continue;"+"\n"
             + "						else {" +												  "\n"
             + "		   					throw new RuntimeException(\"Unrecognized keyword: \" + kword);" +"\n"
@@ -131,7 +131,6 @@ public class KeywordTranslator implements Translator {
             + "    }" +                                                                       "\n";
 
         template += "}";
-        System.out.println(template);
         return template;
     }
 
