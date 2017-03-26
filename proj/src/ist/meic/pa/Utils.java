@@ -1,6 +1,10 @@
 package ist.meic.pa;
 
-import java.util.*;
+import javassist.CtClass;
+import javassist.NotFoundException;
+import javassist.bytecode.Descriptor;
+
+import java.util.Map;
 
 public final class Utils {
 
@@ -11,6 +15,15 @@ public final class Utils {
         for (Map.Entry<K, V> entry : source.entrySet()) {
             target.putIfAbsent(entry.getKey(), entry.getValue());
         }
+    }
+
+    public static boolean hasDefaultConstructor(CtClass c) {
+        try {
+            c.getConstructor(Descriptor.ofConstructor(new CtClass[0]));
+        } catch (NotFoundException e) {
+            return false;
+        }
+        return true;
     }
 
 } // class Utils
