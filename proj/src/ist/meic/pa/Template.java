@@ -1,9 +1,14 @@
 package ist.meic.pa;
 
-import javassist.*;
+// import javassist.*;
+import javassist.CtClass;
+import javassist.NotFoundException;
 
-import java.util.*;
-import java.util.stream.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.stream.Stream;
 
 public final class Template {
 
