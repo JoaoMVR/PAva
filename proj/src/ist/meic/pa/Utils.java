@@ -6,6 +6,10 @@ import javassist.bytecode.Descriptor;
 
 import java.util.Map;
 
+/**
+ * Utilities class, used to store functions that don't seem to belong anywhere
+ * else.
+ */
 public final class Utils {
 
     private Utils() { }
