@@ -138,8 +138,8 @@ public final class Template {
 
         Utils.split(annotation.value())
             .stream()
-            .filter(s -> s.contains("="))
-            .map(s -> s.split("=", 2))
+            .filter(s -> s.contains("=")) // i.e. if it has a default value.
+            .map(s -> s.split("=", 2))   // sp[0] will be the keyword and sp[1] the value.
             .forEach(sp -> assignments.put(sp[0], sp[1]));
 
         return assignments;
