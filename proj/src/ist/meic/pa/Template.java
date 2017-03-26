@@ -3,7 +3,11 @@ package ist.meic.pa;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
+import java.lang.reflect.Field;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
@@ -28,58 +32,60 @@ public final class Template {
      *      one) to each field, which may be a problem if the arguments are
      *      computationally intensive.
      *   2. Using reflection is significantly slower than hardcoded comparisons.
-     *   3. Doesn't handle keywords that reference each other.
      */
     public static String makeTemplate(Map<String,String> defaultAssignments) {
-        String template = "{\n";
+        String template = "{";
 
         // Args size must be even, obviously.
-        template +=                                                       "\n"
-            + "if ($1.length % 2 != 0)"                                 + "\n"
-            + "   throw new RuntimeException(\"Odd argument count.\");" + "\n";
+        template += "Template.assertArgsHaveEvenLength($1);";
 
         for (Map.Entry<String,String> da : defaultAssignments.entrySet()) {
-            template += "    $0." + da.getKey() + "=" + da.getValue() + ";" + "\n";
+            template += "$0." + da.getKey() + "=" + da.getValue() + ";";
         }
 
-        template +=                                                                                        "\n"
-            + "    for (int i = 0, j = 1; j < $1.length; i += 2, j += 2) {"                              + "\n"
-            + "        final String kword = (String) $1[i];"                                             + "\n"
-            + "        final Object value = $1[j];"                                                      + "\n"
-            + ""                                                                                         + "\n"
-            + "        try {"                                                                            + "\n"
-            + "            final java.lang.reflect.Field field = "                                       + "\n"
-            + "                $0.getClass().getDeclaredField(kword);"                                   + "\n"
-            + ""                                                                                         + "\n"
-            + "            field.setAccessible(true);"                                                   + "\n"
-            + "            field.set($0, value);"                                                        + "\n"
-            + "        } catch (NoSuchFieldException e) {"                                               + "\n"
-            + "              java.lang.Class superClass = $0.getClass().getSuperclass();"                + "\n"
-            + ""                                                                                         + "\n"
-            + "              while(!superClass.getName().equals(\"java.lang.Object\")) {"                + "\n"
-            + "                  try {"                                                                  + "\n"
-            + "                      final java.lang.reflect.Field field = "                             + "\n"
-            + "                          superClass.getDeclaredField(kword);"                            + "\n"
-            + ""                                                                                         + "\n"
-            + "                      field.setAccessible(true);"                                         + "\n"
-            + "                      field.set($0, value);"                                              + "\n"
-            + ""                                                                                         + "\n"
-            + "                      break;"                                                             + "\n"
-            + "                  } catch(NoSuchFieldException e) {"                                      + "\n"
-            + "                      superClass = superClass.getSuperclass();"                           + "\n"
-            + ""                                                                                         + "\n"
-            + "                      if (superClass.getName().equals(\"java.lang.Object\")) {"           + "\n"
-            + "                         throw new RuntimeException(\"Unrecognized keyword: \" + kword);" + "\n"
-            + "                      }"                                                                  + "\n"
-            + "                  }"                                                                      + "\n"
-            + "              }"                                                                          + "\n"
-            + "        } catch (Exception e) {"                                                          + "\n"
-            + "            throw new RuntimeException(e);"                                               + "\n"
-            + "        }"                                                                                + "\n"
-            + "    }"                                                                                    + "\n";
+        template += "for (int i = 0, j = 1; j < $1.length; i += 2, j += 2) {"
+                 +  "    final String kword = (String) $1[i];"
+                 +  "    final Object value = $1[j];"
+                 +  "    Template.setField(kword, value, $0);"
+                 +  "}";
 
-        template += "}";
-        return template;
+        return template + "}";
+    }
+
+    /**
+     * Asserts its arguments have even length.
+     */
+    public static void assertArgsHaveEvenLength(Object[] args) {
+        if (args.length % 2 != 0) {
+            throw new RuntimeException("Odd argument count.");
+        }
+    }
+
+    /**
+     * Searches for the first field of name fieldName on the hierarchy of
+     * classes of obj (wether it is private, public, protected or
+     * package-private) and sets its field to value.
+     *
+     * @param fieldName the name of the field to search for.
+     * @param value the value to set the field to.
+     * @param obj the obj for which we want to set the field.
+     */
+    public static void setField(String fieldName, Object value, Object obj) {
+        try {
+            final Field field = Utils.getHierarchy(obj.getClass())
+                .stream()
+                .flatMap(c -> Stream.of(c.getDeclaredFields()))
+                .filter(f -> f.getName().equals(fieldName))
+                .findFirst()
+                .get();
+
+            field.setAccessible(true);
+            field.set(obj, value);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchElementException e) {
+            throw new RuntimeException("Unrecognized keyword: " + fieldName);
+        }
     }
 
     /**

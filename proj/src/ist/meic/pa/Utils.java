@@ -59,4 +59,19 @@ public final class Utils {
         return result;
     }
 
+    /**
+     * @param  clazz
+     * @return a list including clazz and all its superclasses up to, but
+     *         excluding, Object (in this order).
+     */
+    public static List<Class> getHierarchy(final Class clazz) {
+        final List<Class> hierarchy = new ArrayList<>();
+
+        for (Class c = clazz; c != Object.class; c = c.getSuperclass()) {
+            hierarchy.add(c);
+        }
+
+        return hierarchy;
+    }
+
 } // class Utils

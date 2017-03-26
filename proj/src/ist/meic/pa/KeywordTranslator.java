@@ -28,6 +28,11 @@ public class KeywordTranslator implements Translator {
      */
     @Override
     public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
+        // This could be a security issue in a more serious setting,
+        // but, given that we completely override the body of the constructor
+        // this is actually not an issue.
+        pool.importPackage("ist.meic.pa.Template");
+
         final CtClass clazz = pool.get(className);
         CtConstructor ctor;
 
