@@ -1,4 +1,6 @@
-package ist.meic.pa;
+package ist.meic.pa.test.classes;
+
+import ist.meic.pa.KeywordArgs;
 
 public class MixKeys {
     long l;

@@ -1,4 +1,4 @@
-package ist.meic.pa;
+import ist.meic.pa.test.classes.*;
 
 public class TestH {
 	public static void main(String[] args) {

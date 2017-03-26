@@ -13,6 +13,7 @@
   <target name="build">
     <javac srcdir="src:test" destdir="classes" 
            debug="true" includeAntRuntime="false">
+      <compilerarg value="-Xlint:unchecked"/>
       <classpath>
         <fileset dir="jar" includes="**/*.jar"/>
       </classpath>
