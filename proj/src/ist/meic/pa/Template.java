@@ -19,13 +19,15 @@ public final class Template {
     }
 
     /**
-     * Given a map of the default assignments for the KeywordArgs annotated
-     * constructor, outputs code intended to be inserted to that constructor's
-     * body that handles the fields assignments.
+     * @param  defaultAssignments a map of the default assignments for the
+     *         KeywordArgs annotated constructor.
+     * @result code intended to be inserted in the annotated constructor's body,
+     *         that handles the fields assignments.
      *
      * FIXME: Problems with this approach:
-     *   1. Possibly two assignments to each field which may be a problem
-     *      if the arguments are computationally intensive.
+     *   1. Possibly two assignments (one for the default and possibly another
+     *      one) to each field, which may be a problem if the arguments are
+     *      computationally intensive.
      *   2. Using reflection is significantly slower than hardcoded comparisons.
      *   3. Doesn't handle keywords that reference each other.
      */
@@ -82,9 +84,10 @@ public final class Template {
     }
 
     /**
-     * @param  clazz the class which ctor belongs to.
-     * @return map of default assignments. A map like
-     *         [("height", "10"), ("width", "5"), ("margin", "1")].
+     * @param  clazz with the KeywordsArg annotated constructor.
+     * @return map of default assignments for all KeywordArgs annotated
+     *         constructors in the clazz hierarchy. A map like [("height",
+     *         "10"), ("width", "5"), ("margin", "1"), ("name", "Extended")].
      */
     public static Map<String,String> getAllDefaultAssignments(final CtClass clazz) throws NotFoundException, ClassNotFoundException {
         final Map<String,String> assignments = new HashMap<>();
@@ -96,15 +99,21 @@ public final class Template {
         return assignments;
     }
 
+    /**
+     * @param  clazz with the KeywordsArg annotated constructor.
+     * @return map of default assignments for the KeywordArgs annotated
+     *         constructor in this clazz. A map like [("height", "10"),
+     *         ("width", "5"), ("margin", "1")].
+     */
     public static Map<String,String> getDefaultAssignments(final CtClass clazz) throws ClassNotFoundException {
         try {
             final KeywordArgs ann = (KeywordArgs) Stream.of(clazz.getConstructors())
                 .filter(ctor -> ctor.hasAnnotation(KeywordArgs.class))
-                .findFirst() // There will be zero or one, not more.
+                .findFirst() // There should be zero or one, not more.
                 .get()
                 .getAnnotation(KeywordArgs.class);
 
-            return preprocessAnnotation(ann);
+            return getDefaultAssignments(ann);
         } catch (NoSuchElementException e) {
             return new HashMap<>();
         }
@@ -117,22 +126,19 @@ public final class Template {
      *
      *   @KeywordArgs("width=100,height=50,margin=5")
      *
-     * then the resulting list should be
+     * then the resulting map should be
      *
-     *   {"width=100","height=50"}.
+     *   [("height", "50"), ("width", "100"), ("margin", "5")]
      *
      * @param  annotation to be processed.
-     * @return list of keyword assignments of the form "keyword=value".
+     * @return map of keyword assignments of the form (keyword, value).
      *
-     * TODO: Check if this works in cases where ',' or '=' appear inside a
+     * TODO:FIXME: Check if this works in cases where ',' appears inside a
      * string literal.
-     * XXX: Update docs.
-     *
      */
-    public static Map<String,String> preprocessAnnotation(final KeywordArgs annotation) {
+    public static Map<String,String> getDefaultAssignments(final KeywordArgs annotation) {
         final Map<String,String> assignments = new HashMap<>();
 
-        // FIXME: What about if the default value is a string containing "," ?
         Stream.of(annotation.value().split(","))
             .filter(s -> s.contains("="))
             .map(s -> s.split("=", 2))
