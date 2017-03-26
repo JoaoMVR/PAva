@@ -18,18 +18,24 @@ public final class Template {
         return makeTemplate(getAllDefaultAssignments(c));
     }
 
-    // FIXME: Missing documentation.
-    // FIXME: Problems with this approach:
-    //          1. Possibly two assignments to each field which may be a problem
-    //             if the arguments (both to the annotation and to the constructor)
-    //             are computationally intensive.
-    //          2. Using reflection is significantly slower than hardcoded comparisons.
-    //          3. This doesn't handle keywords that reference each other.
-    //          4. Doesn't handle empty keywords.
-    //          5. Doesn't handle inheritance.
-    //			6. Doesn't verify args size, which has to be even
+    /**
+     * Given a map of the default assignments for the KeywordArgs annotated
+     * constructor, outputs code intended to be inserted to that constructor's
+     * body that handles the fields assignments.
+     *
+     * FIXME: Problems with this approach:
+     *   1. Possibly two assignments to each field which may be a problem
+     *      if the arguments are computationally intensive.
+     *   2. Using reflection is significantly slower than hardcoded comparisons.
+     *   3. Doesn't handle keywords that reference each other.
+     */
     public static String makeTemplate(Map<String,String> defaultAssignments) {
         String template = "{\n";
+
+        // Args size must be even, obviously.
+        template +=                                                       "\n"
+            + "if ($1.length % 2 != 0)"                                 + "\n"
+            + "   throw new RuntimeException(\"Odd argument count.\");" + "\n";
 
         for (Map.Entry<String,String> da : defaultAssignments.entrySet()) {
             template += "    $0." + da.getKey() + "=" + da.getValue() + ";" + "\n";
@@ -49,7 +55,7 @@ public final class Template {
             + "        } catch (NoSuchFieldException e) {"                                               + "\n"
             + "              java.lang.Class superClass = $0.getClass().getSuperclass();"                + "\n"
             + ""                                                                                         + "\n"
-            + "              while(!superClass.getName().equals(\"java.lang.Object\")) {"                      + "\n"
+            + "              while(!superClass.getName().equals(\"java.lang.Object\")) {"                + "\n"
             + "                  try {"                                                                  + "\n"
             + "                      final java.lang.reflect.Field field = "                             + "\n"
             + "                          superClass.getDeclaredField(kword);"                            + "\n"
@@ -61,7 +67,7 @@ public final class Template {
             + "                  } catch(NoSuchFieldException e) {"                                      + "\n"
             + "                      superClass = superClass.getSuperclass();"                           + "\n"
             + ""                                                                                         + "\n"
-            + "                      if (superClass.getName().equals(\"java.lang.Object\")) {"                      + "\n"
+            + "                      if (superClass.getName().equals(\"java.lang.Object\")) {"           + "\n"
             + "                         throw new RuntimeException(\"Unrecognized keyword: \" + kword);" + "\n"
             + "                      }"                                                                  + "\n"
             + "                  }"                                                                      + "\n"
