@@ -1,6 +1,5 @@
 package ist.meic.pa;
 
-// import javassist.*;
 import javassist.CtClass;
 import javassist.NotFoundException;
 
@@ -133,13 +132,12 @@ public final class Template {
      * @param  annotation to be processed.
      * @return map of keyword assignments of the form (keyword, value).
      *
-     * TODO:FIXME: Check if this works in cases where ',' appears inside a
-     * string literal.
      */
     public static Map<String,String> getDefaultAssignments(final KeywordArgs annotation) {
         final Map<String,String> assignments = new HashMap<>();
 
-        Stream.of(annotation.value().split(","))
+        Utils.split(annotation.value())
+            .stream()
             .filter(s -> s.contains("="))
             .map(s -> s.split("=", 2))
             .forEach(sp -> assignments.put(sp[0], sp[1]));
