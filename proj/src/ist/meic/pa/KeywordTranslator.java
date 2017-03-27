@@ -32,10 +32,6 @@ public class KeywordTranslator implements Translator {
      */
     @Override
     public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
-        // This could be a security issue but, given that we completely override
-        // the body of the constructor, it is actually not an issue.
-        pool.importPackage("ist.meic.pa.TemplateCode");
-
         final CtClass clazz = pool.get(className);
         CtConstructor ctor;
 
@@ -44,6 +40,10 @@ public class KeywordTranslator implements Translator {
                 .filter(c -> c.hasAnnotation(KeywordArgs.class))
                 .findFirst() // There should be zero or one, not more.
                 .get();
+
+            // This could be a security issue but, given that we completely override
+            // the body of the constructor, it is actually not an issue.
+            pool.importPackage("ist.meic.pa.TemplateCode");
 
             if (!Utils.hasDefaultConstructor(clazz)) {
                 // Adds default constructor for inheritance instantiations.

@@ -25,7 +25,7 @@ public final class Utils {
 
     public static boolean hasDefaultConstructor(CtClass c) {
         try {
-            c.getConstructor(Descriptor.ofConstructor(new CtClass[0]));
+            c.getConstructor(Descriptor.ofConstructor(null));
         } catch (NotFoundException e) {
             return false;
         }

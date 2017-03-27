@@ -32,11 +32,15 @@ public final class Template {
      * @result code intended to be inserted in the annotated constructor's body,
      *         that handles the fields assignments.
      *
-     * FIXME: Problems with this approach:
+     * Pros of this approach:
+     *   1. Super simple implementation.
+     *   2. We can use Javssist and Java 8.
+     *
+     * Cons of this approach:
      *   1. Possibly two assignments (one for the default and possibly another
      *      one) to each field, which may be a problem if the arguments are
      *      computationally intensive.
-     *   2. Using reflection is significantly slower than hardcoded comparisons.
+     *   2. Reflection is slower than hardcoded comparisons.
      */
     private static String makeTemplate(Map<String,String> defaultAssignments) {
         String template = "{";
