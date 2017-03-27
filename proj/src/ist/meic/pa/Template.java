@@ -11,10 +11,17 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
+/**
+ * Class that builds the code intended to be injected by KeywordTranslator.
+ */
 public final class Template {
 
     private Template() { }
 
+    /**
+     * The only public method in this class. This is the called to obtain the
+     * code intended to be injected by KeywordTranslator.
+     */
     public static String build(CtClass c) throws ClassNotFoundException, NotFoundException {
         return makeTemplate(getAllDefaultAssignments(c));
     }
@@ -31,7 +38,7 @@ public final class Template {
      *      computationally intensive.
      *   2. Using reflection is significantly slower than hardcoded comparisons.
      */
-    public static String makeTemplate(Map<String,String> defaultAssignments) {
+    private static String makeTemplate(Map<String,String> defaultAssignments) {
         String template = "{";
 
         // Args size must be even, obviously.
@@ -56,7 +63,7 @@ public final class Template {
      *         constructors in the clazz hierarchy. A map like [("height",
      *         "10"), ("width", "5"), ("margin", "1"), ("name", "Extended")].
      */
-    public static Map<String,String> getAllDefaultAssignments(final CtClass clazz) throws NotFoundException, ClassNotFoundException {
+    private static Map<String,String> getAllDefaultAssignments(final CtClass clazz) throws NotFoundException, ClassNotFoundException {
         final Map<String,String> assignments = new HashMap<>();
 
         for (CtClass c = clazz; !c.getName().equals("java.lang.Object"); c = c.getSuperclass()) {
@@ -72,7 +79,7 @@ public final class Template {
      *         constructor in this clazz. A map like [("height", "10"),
      *         ("width", "5"), ("margin", "1")].
      */
-    public static Map<String,String> getDefaultAssignments(final CtClass clazz) throws ClassNotFoundException {
+    private static Map<String,String> getDefaultAssignments(final CtClass clazz) throws ClassNotFoundException {
         try {
             final KeywordArgs ann = (KeywordArgs) Stream.of(clazz.getConstructors())
                 .filter(ctor -> ctor.hasAnnotation(KeywordArgs.class))
@@ -101,7 +108,7 @@ public final class Template {
      * @return map of keyword assignments of the form (keyword, value).
      *
      */
-    public static Map<String,String> getDefaultAssignments(final KeywordArgs annotation) {
+    private static Map<String,String> getDefaultAssignments(final KeywordArgs annotation) {
         final Map<String,String> assignments = new HashMap<>();
 
         Utils.split(annotation.value())

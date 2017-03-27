@@ -5,6 +5,14 @@ import java.lang.reflect.Field;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
+/**
+ * This class contains methods intended to be injected in the templates built by
+ * class Template. These methods differ from the ones in class Template in that
+ * their purpose is to be injected into instead of being used to construct the
+ * templates themselves. We took this approach because it makes the templates
+ * easier to produce by leveraging the compiler to catch errors in the templates
+ * earlier on. Also, we can use Java 8.
+ */
 public final class TemplateCode {
 
     private TemplateCode() { }

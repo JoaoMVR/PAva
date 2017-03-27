@@ -12,6 +12,10 @@ import java.lang.annotation.Annotation;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
+/**
+ * Javassist translator that takes care of KeywordArgs annotations by injecting
+ * the appropriate code.
+ */
 public class KeywordTranslator implements Translator {
 
     @Override

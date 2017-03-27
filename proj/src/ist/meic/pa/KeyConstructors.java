@@ -3,6 +3,11 @@ package ist.meic.pa;
 import javassist.Loader;
 import javassist.ClassPool;
 
+/**
+ * Program entrypoint. Setups a new classloader with a translator that takes
+ * care of KeywordArgs annotations and runs the program and parameters given as
+ * arguments.
+ */
 public class KeyConstructors {
   
     public static void main(String[] args) throws Throwable {
@@ -21,4 +26,4 @@ public class KeyConstructors {
         classLoader.run(args[0], restArgs);
     }
 
-}
+} // class KeyConstructors
