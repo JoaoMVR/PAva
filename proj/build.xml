@@ -24,6 +24,7 @@
       <fileset dir="classes" includes="**/*"/>
     </delete>
     <delete file="keyConstructors.jar"/>
+    <delete file="g18.zip"/>
   </target>
 
   <target name="build">
@@ -40,6 +41,12 @@
     <java classpath="classes:javassist.jar"
           classname="KeyConstructors"
           fork="true"/>
+  </target>
+
+  <target name="bundle">
+    <zip destfile="g18.zip"
+         basedir="."
+         update="true"/>
   </target>
 
 </project>
