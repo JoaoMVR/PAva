@@ -12,6 +12,10 @@ import java.lang.annotation.Annotation;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
+/**
+ * Javassist translator that takes care of KeywordArgs annotations by injecting
+ * the appropriate code.
+ */
 public class KeywordTranslator implements Translator {
 
     @Override
@@ -28,11 +32,6 @@ public class KeywordTranslator implements Translator {
      */
     @Override
     public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
-        // This could be a security issue in a more serious setting,
-        // but, given that we completely override the body of the constructor
-        // this is actually not an issue.
-        pool.importPackage("ist.meic.pa.Template");
-
         final CtClass clazz = pool.get(className);
         CtConstructor ctor;
 
@@ -41,6 +40,10 @@ public class KeywordTranslator implements Translator {
                 .filter(c -> c.hasAnnotation(KeywordArgs.class))
                 .findFirst() // There should be zero or one, not more.
                 .get();
+
+            // This could be a security issue but, given that we completely override
+            // the body of the constructor, it is actually not an issue.
+            pool.importPackage("ist.meic.pa.TemplateCode");
 
             if (!Utils.hasDefaultConstructor(clazz)) {
                 // Adds default constructor for inheritance instantiations.
