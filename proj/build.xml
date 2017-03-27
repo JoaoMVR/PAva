@@ -1,12 +1,11 @@
 <project name="KeyConstructors" default="jar">
 
   <target name="jar">
-    <antcall target="init"/>
-    <antcall target="clean"/>
-    <antcall target="build"/>
+    <antcall target="build_src"/>
 
     <jar destfile="keyConstructors.jar"
-         basedir=".">
+         basedir="."
+         includes="src/**/*.java">
       <fileset dir="classes" includes="**/*.class" />
       <zipgroupfileset dir="jar" includes="**/*.jar" />
       <manifest>
@@ -15,19 +14,29 @@
     </jar>
   </target>
 
-  <target name="init">
-    <mkdir dir="classes"/>
-  </target>
-
   <target name="clean">
     <delete includeEmptyDirs="true">
       <fileset dir="classes" includes="**/*"/>
     </delete>
     <delete file="keyConstructors.jar"/>
     <delete file="g18.zip"/>
+    <delete dir="classes"/>
   </target>
 
+  <target name="build_src">
+    <mkdir dir="classes"/>
+    <javac srcdir="src" destdir="classes"
+           debug="true" includeAntRuntime="false">
+      <compilerarg value="-Xlint:unchecked"/>
+      <classpath>
+        <fileset dir="jar" includes="**/*.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+
   <target name="build">
+    <mkdir dir="classes"/>
     <javac srcdir="src:test" destdir="classes"
            debug="true" includeAntRuntime="false">
       <compilerarg value="-Xlint:unchecked"/>
@@ -37,16 +46,11 @@
     </javac>
   </target>
 
-  <target name="run">
-    <java classpath="classes:javassist.jar"
-          classname="KeyConstructors"
-          fork="true"/>
-  </target>
-
   <target name="bundle">
-    <zip destfile="g18.zip"
-         basedir="."
-         update="true"/>
+    <zip destfile="project.zip">
+      <zipfileset dir="." prefix="g18"
+                  includes="src/**,build.xml,jar/javassist.jar"/>
+    </zip>
   </target>
 
 </project>
