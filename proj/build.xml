@@ -1,4 +1,19 @@
-<project name="KeyConstructors">
+<project name="KeyConstructors" default="jar">
+
+  <target name="jar">
+    <antcall target="init"/>
+    <antcall target="clean"/>
+    <antcall target="build"/>
+
+    <jar destfile="keyConstructors.jar"
+         basedir=".">
+      <fileset dir="classes" includes="**/*.class" />
+      <zipgroupfileset dir="jar" includes="**/*.jar" />
+      <manifest>
+        <attribute name="Main-Class" value="ist.meic.pa.KeyConstructors"/>
+      </manifest>
+    </jar>
+  </target>
 
   <target name="init">
     <mkdir dir="classes"/>
@@ -8,10 +23,11 @@
     <delete includeEmptyDirs="true">
       <fileset dir="classes" includes="**/*"/>
     </delete>
+    <delete file="keyConstructors.jar"/>
   </target>
 
   <target name="build">
-    <javac srcdir="src:test" destdir="classes" 
+    <javac srcdir="src:test" destdir="classes"
            debug="true" includeAntRuntime="false">
       <compilerarg value="-Xlint:unchecked"/>
       <classpath>
