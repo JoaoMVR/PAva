@@ -8,6 +8,7 @@
      ,(setq counter 0)
      
      ,@(mapcar #'(lambda (x) `(defun ,(intern (concatenate 'string (string name) "-" (string-upcase x))) (,name)
-                               (aref ,name ,counter))
-                              (setq counter (1+ counter))) slots)))
+                                (aref ,name ,counter))
+                   (setq counter (1+ counter))) slots)))
 
+; criar uma funçao que incrementa counter fora da macro, chamada dentro da macro
