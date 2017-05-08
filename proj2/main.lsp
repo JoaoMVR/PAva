@@ -5,7 +5,6 @@
     (defun ,(intern (concatenate 'string "GET-" (string name) "-SLOTS")) ()
       ',slots)
     ,@(mapcar #'(lambda (x) `(defun ,(intern (concatenate 'string (string name) "-" (string-upcase x))) (,name)
-                               (aref ,name ,(position 'x
-                                                      '(slots)
+                               (aref ,name ,(position x
+                                                      slots
                                                       :test #'equal)))) slots)))
-; criar uma fun�ao que incrementa counter fora da macro, chamada dentro da macro
