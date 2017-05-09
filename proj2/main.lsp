@@ -1,10 +1,9 @@
-
 ;macro definition.
 (defmacro def-class (name &rest slots)
   `(progn
     ;Constructor
     (defun ,(intern (concatenate 'string "MAKE-" (string name))) (&key ,@slots)
-      (vector ,@slots))
+      (vector ,(symbol-name name) ,@slots))
     ;Get slots. Returns the list with the slots of the class
     (defun ,(intern (concatenate 'string "GET-" (string name) "-SLOTS")) ()
       ',slots)
