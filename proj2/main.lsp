@@ -1,8 +1,17 @@
+(defvar *classes-db* (make-hash-table))
 
+(defun add-to-db (class &rest slots)
+  ((setf (gethash class *classes-db*) slots)))
+
+(defun get-from-db)
+
+(defmacro def-inheritance-class ((&rest classes) &rest slots)
+  (let ((name (car classes))
+        (slots (cons )))))
 
 
 ;macro definition.
-(defmacro def-class (classesname &rest slots)
+(defmacro def-class (name &rest slots)
   `(progn
     ;Constructor
     (defun ,(intern (concatenate 'string "MAKE-" (string name))) (&key ,@slots)
@@ -19,3 +28,7 @@
     (defun ,(intern (concatenate 'string (string name) "?")) (,name)
       (if (string= ,(symbol-name name) (aref ,name ,0))'t 'nil))
     ))
+
+
+(let ((a (make-person :name "pauli" :age 22)))
+  (person-name a))
