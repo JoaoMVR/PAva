@@ -1,5 +1,8 @@
+
+
+
 ;macro definition.
-(defmacro def-class (name &rest slots)
+(defmacro def-class (classesname &rest slots)
   `(progn
     ;Constructor
     (defun ,(intern (concatenate 'string "MAKE-" (string name))) (&key ,@slots)
@@ -9,10 +12,10 @@
       ',slots)
     ;Getters
     ,@(mapcar #'(lambda (x) `(defun ,(intern (concatenate 'string (string name) "-" (string-upcase x))) (,name)
-                               (aref ,name ,(position x
+                               (aref ,name ,(1+(position x
                                                       slots
-                                                      :test #'equal)))) slots)
+                                                      :test #'equal))))) slots)
     ;Recognizer (class? obj). It doesn't work yet
-    (defun ,(intern (concatenate 'string (string name) "?")) (obj)
-      't)
+    (defun ,(intern (concatenate 'string (string name) "?")) (,name)
+      (if (string= ,(symbol-name name) (aref ,name ,0))'t 'nil))
     ))
