@@ -8,6 +8,15 @@
                                                      (string class-name)))))
        (t nil)))) 
 
+(defun make-getter (class-name)
+  #'(lambda (x)
+      `(defun ,(intern (concatenate 'string
+                                    (string class-name)
+                                    "-"
+                                    (string x))) (obj)
+         (funcall obj ',(intern (concatenate 'string
+                                             "SLOT-"
+                                             (string x))))))) 
 (defmacro def-class (classes &rest slots)
   (let ((class-name (if (listp classes)
                         (car classes)
@@ -44,24 +53,10 @@
                           (when res (return res))))))))))
 
      ;; Getters
-     ,@(mapcar
-        #'(lambda (x)
-            `(defun ,(intern (concatenate 'string
-                                          (string class-name)
-                                          "-"
-                                          (string x))) (obj)
-               (funcall obj ',(intern (concatenate 'string
-                                                   "SLOT-"
-                                                   (string x))))))
-        slots)
+     ,@(mapcar (make-getter class-name) slots)
 
      ;; Recognizer
      ,(make-recognizer class-name)))) 
-
-;;------------------------------------------------------------------------------
-
-;; We could use this instead to implement the recognizer.
-(gensym) 
 
 ;;------------------------------------------------------------------------------
 
@@ -74,6 +69,11 @@
     (person-age a)
     (person? a)
     (person? b))) 
+
+;;------------------------------------------------------------------------------
+
+;; We could use this instead to implement the recognizer.
+(gensym) 
 
 ;;------------------------------------------------------------------------------
 
