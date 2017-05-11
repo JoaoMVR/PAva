@@ -1,16 +1,16 @@
-(defun make-sym (&rest strings)
+(defun make-name (&rest strings)
   (intern (apply #'concatenate 'string strings))) 
 
 (defun make-recognizer (class-name)
   `(defun ,(make-name (string class-name) "?") (obj)
      (typecase obj
-       (function (funcall obj ',(make-name "CLASS-" (string class-name))))
+       (function (funcall obj 'RECOGNIZE ',(make-name "CLASS-" (string class-name))))
        (t nil)))) 
 
 (defun make-getter (class-name)
   #'(lambda (x)
       `(defun ,(make-name (string class-name) "-" (string x)) (obj)
-         (funcall obj ',(make-name "SLOT-" (string x)))))) 
+         (funcall obj 'GET-SLOT ',(make-name "SLOT-" (string x)))))) 
 
 (defun make-slots-alist (slots)
   (cons 'list
@@ -19,20 +19,21 @@
               `(list ',(make-name "SLOT-" (string slot)) ,slot))
           slots))) 
 
+(defun delegate (classes query arg)
+  (dolist (class classes)
+    (let ((res (funcall class query arg)))
+      (when res (return res))))) 
+
 (defun make-constructor (class-name super-classes slots)
   `(defun ,(make-name "MAKE-" (string class-name)) (&key ,@slots)
-     (lambda (arg)
+     (lambda (query arg)
        (let ((slots ,(make-slots-alist slots)))
-         (if (eql arg ',(intern (concatenate 'string
-                                             "CLASS-"
-                                             (string class-name))))
-             t
-             (let ((key-value (assoc arg slots)))
-               (if (car key-value)
-                   (cadr key-value)
-                   (dolist (class ,super-classes)
-                     (let ((res (funcall class arg)))
-                       (when res (return res))))))))))) 
+         (cond
+           ((eql query 'RECOGNIZE) (eql arg ',(intern (concatenate 'string "CLASS-"
+                                                                   (string class-name)))))
+           ((eql query 'GET-SLOT) (let ((key-value (assoc arg slots)))
+                                    (when (car key-value) (cadr key-value))))
+            (t (delegate ,super-classes query arg))))))) 
 
 (defmacro def-class (classes &rest slots)
   (let ((class-name    (if (listp classes) (car classes) classes))
