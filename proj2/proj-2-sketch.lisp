@@ -1,38 +1,28 @@
+(defun make-sym (&rest strings)
+  (intern (apply #'concatenate 'string strings))) 
+
 (defun make-recognizer (class-name)
-  `(defun ,(intern (concatenate 'string
-                                (string class-name)
-                                "?")) (obj)
+  `(defun ,(make-name (string class-name) "?") (obj)
      (typecase obj
-       (function (funcall obj ',(intern (concatenate 'string
-                                                     "CLASS-"
-                                                     (string class-name)))))
+       (function (funcall obj ',(make-name "CLASS-" (string class-name))))
        (t nil)))) 
 
 (defun make-getter (class-name)
   #'(lambda (x)
-      `(defun ,(intern (concatenate 'string
-                                    (string class-name)
-                                    "-"
-                                    (string x))) (obj)
-         (funcall obj ',(intern (concatenate 'string
-                                             "SLOT-"
-                                             (string x))))))) 
+      `(defun ,(make-name (string class-name) "-" (string x)) (obj)
+         (funcall obj ',(make-name "SLOT-" (string x)))))) 
+
+(defun make-slots-alist (slots)
+  (cons 'list
+         (mapcar
+          #'(lambda (slot)
+              `(list ',(make-name "SLOT-" (string slot)) ,slot))
+          slots))) 
 
 (defun make-constructor (class-name super-classes slots)
-  `(defun ,(intern (concatenate 'string
-                                "MAKE-"
-                                (string class-name))) (&key ,@slots)
+  `(defun ,(make-name "MAKE-" (string class-name)) (&key ,@slots)
      (lambda (arg)
-       (let ((superclass ,super-classes)
-             (slots
-               ,(cons 'list
-                      (mapcar
-                       #'(lambda (slot)
-                           `(list ',(intern (concatenate 'string
-                                                         "SLOT-"
-                                                         (string slot)))
-                                  ,slot))
-                       slots))))
+       (let ((slots ,(make-slots-alist slots)))
          (if (eql arg ',(intern (concatenate 'string
                                              "CLASS-"
                                              (string class-name))))
@@ -45,14 +35,9 @@
                        (when res (return res))))))))))) 
 
 (defmacro def-class (classes &rest slots)
-  (let ((class-name (if (listp classes)
-                        (car classes)
-                        classes))
-        (super-classes (if (listp classes)
-                           (cdr classes)
-                           nil)))
+  (let ((class-name    (if (listp classes) (car classes) classes))
+        (super-classes (if (listp classes) (cdr classes) nil)))
     `(progn
-
        ,(make-constructor class-name super-classes slots) ; Constructor
        ,@(mapcar (make-getter class-name) slots)          ; Getters
        ,(make-recognizer class-name))))                   ; Recognizer
