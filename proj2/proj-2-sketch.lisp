@@ -1,3 +1,13 @@
+(defun make-recognizer (class-name)
+  `(defun ,(intern (concatenate 'string
+                                (string class-name)
+                                "?")) (obj)
+     (typecase obj
+       (function (funcall obj ',(intern (concatenate 'string
+                                                     "CLASS-"
+                                                     (string class-name)))))
+       (t nil)))) 
+
 (defmacro def-class (classes &rest slots)
   (let ((class-name (if (listp classes)
                         (car classes)
@@ -46,14 +56,7 @@
         slots)
 
      ;; Recognizer
-     (defun ,(intern (concatenate 'string
-                                  (string class-name)
-                                  "?")) (obj)
-       (typecase obj
-         (function (funcall obj ',(intern (concatenate 'string
-                                                       "CLASS-"
-                                                       (string class-name)))))
-          (t nil)))))) 
+     ,(make-recognizer class-name)))) 
 
 ;;------------------------------------------------------------------------------
 
