@@ -51,7 +51,7 @@ Slot accessing and recognizing work by delegating to the superclass. This also
 solves subtyping.
 
 Multiple inheritance works either by successively wrapping superclasses (easier)
-or by mantaining a stack superclasses (more difficult).
+or by mantaining a stack of superclasses (more difficult).
 
 ** Example
 
@@ -87,7 +87,7 @@ or by mantaining a stack superclasses (more difficult).
 (defun person-age (p) (p 'nil 'slot-age))
 
 ;;; What is generated: Recognizer
-(defun person? (p) (p 'class-person))
+(defun person? (p) (p 'class-person 'nil))
 
 #+END_SRC
 
