@@ -1,4 +1,4 @@
-(defparameter *metaclasses* (make-hash-table))
+(defvar *metaclasses* (make-hash-table))
 
 ;;;-----------------------------------------------------------------------------
 
@@ -22,30 +22,34 @@
 
 ;;;-----------------------------------------------------------------------------
 
-(defun delegate (classes msg arg)
-  (dolist (class classes)
-    (let ((res (funcall class msg arg)))
-      (when res (return res)))))
+(defun get-slots-from-class (class)
+  (when (gethash class *metaclasses*)
+    (funcall (gethash class *metaclasses*)
+             :msg 'CLASS-SLOTS)))
 
-(defun make-slots-alist (unbound-slots)
-  `(mapcar #'(lambda (us)
-               )))
+(defun get-slots-from-class-hierarchy (hierarchy)
+  (mapcan #'get-slots-from-class hierarchy))
 
-(defun make-slots-alist (unbound-slots)
-  (cons 'list
-        (mapcar #'(lambda (unbound-slot)
-                    `(list ',(make-slot-name unbound-slot)
-                           ,unbound-slot))
-                unbound-slots)))
+(defun slot-name-to-slot (slot-name)
+  (intern (subseq (string slot-name) 5)))
 
-(defun make-slots (unbound-slots)
-  `(let ((slots-alist ,(make-slots-alist unbound-slots))
-         (slots-ht (make-hash-table)))
-     (progn
-       (dolist (key-value slots-alist)
-         (setf (gethash (car key-value) slots-ht)
-               (cadr key-value)))
-       slots-ht)))
+(defun make-slot-pair (slot-name)
+  `(list ',slot-name ,(slot-name-to-slot slot-name)))
+
+(defun make-slots-alist (slots-names)
+  (cons 'list (mapcar #'make-slot-pair slots-names)))
+
+(defun make-slots (hierarchy)
+  `(let ((slots-alist ,(make-slots-alist (get-slots-from-class-hierarchy hierarchy)))
+        (slots-ht (make-hash-table)))
+    (progn
+      (dolist (key-value slots-alist)
+        (setf (gethash (car key-value) slots-ht)
+              (cadr key-value)))
+      slots-ht)))
+
+(defun make-slot-keys (hierarchy)
+  (mapcar #'slot-name-to-slot (get-slots-from-class-hierarchy hierarchy)))
 
 (defun recognize (hierarchy class-name-to-recognize)
   (or (mapcar #'(lambda (class-name)
@@ -56,19 +60,18 @@
 
 ;;;-----------------------------------------------------------------------------
 
-(defun make-constructor (unbound-class
-                         unbound-hierarchy
-                         unbound-slots)
-  `(defun ,(make-constructor-name unbound-class) (&key ,@unbound-slots)
+(defun make-constructor (unbound-class unbound-hierarchy unbound-slots)
+  `(defun ,(make-constructor-name unbound-class)
+       (&key ,@(make-slot-keys (mapcar #'make-class-name unbound-hierarchy)))
      (lambda (msg param)
-       (let ((slots ,(make-slots unbound-slots))
-             ; Slots are wrong, they're missing the ones from the superclasses
-             (hierarchy ',(mapcar #'make-class-name unbound-hierarchy)))
+       (let ((slots ,(make-slots (mapcar #'make-class-name unbound-hierarchy))))
          (cond
-           ((eql msg 'RECOGNIZE) (recognize hierarchy param))
+           ((eql msg 'RECOGNIZE) (recognize ',(mapcar #'make-class-name unbound-hierarchy) param))
+           ;; This still doesn't differentiate whether the slots are undefined or nil
            ((and (eql msg 'GET-SLOT-VALUE)
                  (nth-value 1 (gethash param slots))) (gethash param slots)))))))
 
+;; Maybe the getter should only work if the object is recognized.
 (defun make-getter (class-name)
   #'(lambda (slot-name)
       `(defun ,(make-getter-name class-name slot-name) (obj)
@@ -85,20 +88,6 @@
 
 ;;;-----------------------------------------------------------------------------
 
-(defmacro def-class (classes &rest slots)
-  (let* ((classes (if (listp classes) (car classes) (list classes)))
-         (class (car classes)))
-    `(progn
-       (def-metaclass
-           ',(make-class-name class)
-           ',(mapcar #'make-slot-name slots))
-
-       ,(make-constructor class classes slots)
-
-       ,@(mapcar (make-getter class) slots)
-
-       ,(make-recognizer class))))
-
 (defun def-metaclass (class-name slots)
   (setf (gethash class-name *metaclasses*)
         (lambda (&key (msg 'CLASS-NAME))
@@ -108,9 +97,33 @@
             ((eql msg
                   'CLASS-SLOTS) slots)))))
 
+(defmacro def-class (classes &rest slots)
+  (let* ((all-classes (if (listp classes) (car classes) (list classes)))
+         (class (car all-classes)))
+    `(progn
+       (def-metaclass
+           ',(make-class-name class)
+           ',(mapcar #'make-slot-name slots))
+
+       ,(make-constructor class all-classes slots)
+
+       ,@(mapcar (make-getter class) slots)
+
+       ,(make-recognizer class))))
+
 ;;;-----------------------------------------------------------------------------
 
-(def-class person name age) 
+(def-class person
+  name
+  age) 
+
+;; (funcall (gethash 'CLASS-PERSON *metaclasses*) :msg 'CLASS-SLOTS) 
+
+
+(setf p (make-person :name "Rodrigo" :age 22))
+
+(person-name p) 
+(person-age p) 
 
 (let ((a (make-person :name "Paulo" :age 33))
       (b "I am not a person"))
@@ -119,4 +132,3 @@
    (person-age a)
    (person? a)
    (person? b)))
-
