@@ -60,7 +60,7 @@
 
 ;;;-----------------------------------------------------------------------------
 
-(defun make-constructor (unbound-class unbound-hierarchy unbound-slots)
+(defun make-constructor (unbound-class unbound-hierarchy)
   `(defun ,(make-constructor-name unbound-class)
        (&key ,@(make-slot-keys (mapcar #'make-class-name unbound-hierarchy)))
      (lambda (msg param)
@@ -98,14 +98,14 @@
                   'CLASS-SLOTS) slots)))))
 
 (defmacro def-class (classes &rest slots)
-  (let* ((all-classes (if (listp classes) (car classes) (list classes)))
+  (let* ((all-classes (if (listp classes) classes (list classes)))
          (class (car all-classes)))
     `(progn
        (def-metaclass
            ',(make-class-name class)
            ',(mapcar #'make-slot-name slots))
 
-       ,(make-constructor class all-classes slots)
+       ,(make-constructor class all-classes)
 
        ,@(mapcar (make-getter class) slots)
 
@@ -116,6 +116,9 @@
 (def-class person
   name
   age) 
+
+(def-class (student person)
+  course) 
 
 ;; (funcall (gethash 'CLASS-PERSON *metaclasses*) :msg 'CLASS-SLOTS) 
 
@@ -132,3 +135,10 @@
    (person-age a)
    (person? a)
    (person? b)))
+
+(defun test (&rest keys &key name age)
+  (print name)
+  (print age))
+
+patricia.f.9@hotmail.com
+
