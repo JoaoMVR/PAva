@@ -140,5 +140,3 @@
   (print name)
   (print age))
 
-patricia.f.9@hotmail.com
-
