@@ -1,5 +1,16 @@
 (defvar *classes* (make-hash-table))
 
+(defun print-hash-entry (key value)
+  (format t "(~S . ~S)~%" key value))
+
+(defun print-hash-table (hash-table)
+  (maphash #'print-hash-entry hash-table))
+
+(defun print-classes ()
+  (print-hash-table *classes*))
+
+;;;-----------------------------------------------------------------------------
+
 (defun make-name (&rest strings)
   (intern (string-upcase (apply #'concatenate
                                 'string
@@ -75,16 +86,21 @@
 (defun make-recognizer (unbound-class)
   `(defun ,(make-recognizer-name unbound-class) (obj)
      (when (hash-table-p obj)
-       (eql (gethash 'CLASS obj) ',unbound-class))))
+       (let ((class (gethash 'CLASS obj)))
+         (if (eql class ',unbound-class)
+             t
+             (dolist (super-class (gethash super-classes class))
+               (when (eql super-class ',unbound-class)
+                 (return t))))))))
 
 (defun make-metaclass! (unbound-class unbound-super-classes unbound-slots)
-  `(let ((class         ',(make-name unbound-class))
-         (super-classes ',(mapcar #'make-name unbound-super-classes))
-         (slots         ',(mapcar #'make-name unbound-slots)))
-     (progn
-       (set-class! class)
-       (set-super-classes! class super-classes)
-       (set-slots! class slots))))
+  (let* ((class         (make-name unbound-class))
+         (super-classes (mapcar #'make-name unbound-super-classes))
+         (slots         (mapcar #'make-name unbound-slots)))
+    `(progn
+       ,(set-class! class)
+       ,(set-super-classes! class super-classes)
+       ,(set-slots! class slots))))
 
 (defmacro def-class (unbound-classes &rest unbound-slots)
   (let* ((unbound-class         (if (listp unbound-classes)
@@ -93,8 +109,8 @@
          (unbound-super-classes (if (listp unbound-classes)
                                       (cdr unbound-classes)
                                       nil)))
+    (make-metaclass! unbound-class unbound-super-classes unbound-slots)
     `(progn
-       ,(make-metaclass! unbound-class unbound-super-classes unbound-slots)
        ,(make-constructor unbound-class)
        ,@(mapcar (make-getter unbound-class) unbound-slots)
        ,(make-recognizer unbound-class))))
@@ -103,9 +119,7 @@
   name
   age) 
 
-(loop for key being the hash-keys of *classes* collect key) 
-
-(let ((a (make-person :name "Paulo" :age 33))
+(let ((a (make-person :name "Paulo" :age 33) )
       (b "I am not a person"))
   (and
     (equal (person-name a) "Paulo")
