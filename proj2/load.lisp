@@ -1,4 +1,15 @@
+;;; FIXME:
+;;; 1. We should make clearer in the code when we're manipulating class names
+;;;    (of type symbol) and classes (of type hash-table).
+;;; 2. What do we do if we apply a method that is not defined for a certain
+;;;    class?
+;;; 3. After all we need to derive getters for slots of the superclasses...
+
+;;;-----------------------------------------------------------------------------
+
 (defvar *classes* (make-hash-table))
+
+;;;-----------------------------------------------------------------------------
 
 (defun print-hash-entry (key value)
   (format t "(~S . ~S)~%" key value))
@@ -8,6 +19,14 @@
 
 (defun print-classes ()
   (print-hash-table *classes*))
+
+(defun print-everything ()
+  (print-classes)
+
+  (maphash (lambda (key value)
+             (format t "~%")
+             (print-hash-table value))
+           *classes*))
 
 ;;;-----------------------------------------------------------------------------
 
@@ -38,17 +57,37 @@
     (setf (gethash 'CLASS
                    (gethash class *classes*)) class)))
 
-(defun set-super-classes! (class super-classes)
+(defun set-super-classes! (class direct-super-classes)
   (setf (gethash 'SUPER-CLASSES
-                 (gethash class *classes*)) super-classes))
+                 (gethash class *classes*))
+        direct-super-classes))
+
+(defun get-class (class-name)
+  (gethash class-name *classes*))
+
+(defun get-class-name (class)
+  (gethash 'CLASS class))
+
+(defun get-direct-super-classes (class-name)
+  (gethash 'SUPER-CLASSES (get-class class-name)))
+
+(defun get-class-hierarchy-with-duplicates (class-name)
+  (let ((direct-super-classes (get-direct-super-classes class-name)))
+    (append direct-super-classes
+            (if (null direct-super-classes)
+                nil
+                (apply #'append (mapcar #'get-class-hierarchy-with-duplicates
+                                        direct-super-classes))))))
+
+(defun get-class-hierarchy (class-name)
+  (remove-duplicates (get-class-hierarchy-with-duplicates class-name)))
 
 (defun get-slots (class)
-  (gethash 'SLOTS (gethash class *classes*)))
+  (gethash 'SLOTS (gethash class *classes*))
+  )
 
 (defun get-super-classes-slots (class)
-  (mapcan #'get-slots
-          (gethash 'SUPER-CLASSES
-                   (gethash class *classes*))))
+  (apply #'append (mapcar #'get-slots (get-class-hierarchy class))))
 
 (defun get-all-slots (class)
   (append (get-slots class)
@@ -74,8 +113,7 @@
        (let ((self (make-hash-table)))
          (progn
            (setf (gethash 'CLASS self) ',unbound-class)
-           (setf (gethash 'SLOTS self)
-                 ,(make-slots hierarchy-unbound-slots))
+           (setf (gethash 'SLOTS self) ,(make-slots hierarchy-unbound-slots))
            self)))))
 
 (defun make-getter (unbound-class)
@@ -86,21 +124,20 @@
 (defun make-recognizer (unbound-class)
   `(defun ,(make-recognizer-name unbound-class) (obj)
      (when (hash-table-p obj)
-       (let ((class (gethash 'CLASS obj)))
-         (if (eql class ',unbound-class)
+       (let ((class-name (get-class-name obj)))
+         (if (eql class-name ',unbound-class)
              t
-             (dolist (super-class (gethash super-classes class))
-               (when (eql super-class ',unbound-class)
-                 (return t))))))))
+             (loop for super-class-name in (get-class-hierarchy class-name)
+                   thereis (eql super-class-name ',unbound-class)))))))
 
 (defun make-metaclass! (unbound-class unbound-super-classes unbound-slots)
   (let* ((class         (make-name unbound-class))
          (super-classes (mapcar #'make-name unbound-super-classes))
          (slots         (mapcar #'make-name unbound-slots)))
-    `(progn
-       ,(set-class! class)
-       ,(set-super-classes! class super-classes)
-       ,(set-slots! class slots))))
+    (progn
+      (set-class! class)
+      (set-super-classes! class super-classes)
+      (set-slots! class slots))))
 
 (defmacro def-class (unbound-classes &rest unbound-slots)
   (let* ((unbound-class         (if (listp unbound-classes)
@@ -115,14 +152,3 @@
        ,@(mapcar (make-getter unbound-class) unbound-slots)
        ,(make-recognizer unbound-class))))
 
-(def-class person
-  name
-  age) 
-
-(let ((a (make-person :name "Paulo" :age 33) )
-      (b "I am not a person"))
-  (and
-    (equal (person-name a) "Paulo")
-    (equal (person-age a) 33)
-    (equal (person? a) t)
-    (equal (person? b) nil)))
