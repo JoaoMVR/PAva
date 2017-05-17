@@ -48,7 +48,7 @@
 ;;;-----------------------------------------------------------------------------
 ;;; Reflection
 
-(defun set-slots! (class slots)
+(defun set-slots!  slots)
   (setf (gethash 'SLOTS (gethash class *classes*)) slots))
 
 (defun set-class! (class)
@@ -145,7 +145,7 @@
                                     unbound-classes))
          (unbound-slots         (if (listp unbound-classes)
                                     (append unbound-slots
-                                            (mapcan #'get-slots
+                                            (apply #'append(mapcar #'get-slots
                                                     (cdr unbound-classes)))
                                     unbound-slots))
          (unbound-super-classes (if (listp unbound-classes)
