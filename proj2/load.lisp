@@ -107,14 +107,14 @@
        (setf (gethash key slots-ht) (car value)))
      slots-ht))
 
-(defun make-constructor (unbound-class)
-  (let ((hierarchy-unbound-slots (get-all-slots unbound-class)))
-    `(defun ,(make-constructor-name unbound-class) (&key ,@hierarchy-unbound-slots)
+(defun make-constructor (unbound-class unbound-slots)
+    `(defun ,(make-constructor-name unbound-class) (&key ,@unbound-slots)
        (let ((self (make-hash-table)))
          (progn
            (setf (gethash 'CLASS self) ',unbound-class)
-           (setf (gethash 'SLOTS self) ,(make-slots hierarchy-unbound-slots))
-           self)))))
+           (setf (gethash 'SLOTS self)
+                 ,(make-slots unbound-slots))
+           self))))
 
 (defun make-getter (unbound-class)
   #'(lambda (unbound-slot)
@@ -143,12 +143,16 @@
   (let* ((unbound-class         (if (listp unbound-classes)
                                     (car unbound-classes)
                                     unbound-classes))
+         (unbound-slots         (if (listp unbound-classes)
+                                    (append unbound-slots
+                                            (mapcan #'get-slots
+                                                    (cdr unbound-classes)))
+                                    unbound-slots))
          (unbound-super-classes (if (listp unbound-classes)
                                       (cdr unbound-classes)
                                       nil)))
     (make-metaclass! unbound-class unbound-super-classes unbound-slots)
     `(progn
-       ,(make-constructor unbound-class)
+       ,(make-constructor unbound-class unbound-slots)
        ,@(mapcar (make-getter unbound-class) unbound-slots)
        ,(make-recognizer unbound-class))))
-
