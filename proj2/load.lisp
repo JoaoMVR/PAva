@@ -3,7 +3,6 @@
 ;;;    (of type symbol) and classes (of type hash-table).
 ;;; 2. What do we do if we apply a method that is not defined for a certain
 ;;;    class?
-;;; 3. After all we need to derive getters for slots of the superclasses...
 
 ;;;-----------------------------------------------------------------------------
 
@@ -145,8 +144,9 @@
                                     unbound-classes))
          (unbound-slots         (if (listp unbound-classes)
                                     (append unbound-slots
-                                            (mapcan #'get-slots
-                                                    (cdr unbound-classes)))
+                                            (apply #'append
+                                                   (mapcar #'get-slots
+                                                           (cdr unbound-classes))))
                                     unbound-slots))
          (unbound-super-classes (if (listp unbound-classes)
                                       (cdr unbound-classes)
