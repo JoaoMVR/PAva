@@ -5,10 +5,18 @@
 ;;;    class?
 
 ;;;-----------------------------------------------------------------------------
-
+;;; The class system implementation is structured as follows: classes are
+;;; organized in a hash-table, *classes* indexed by class name. A class name is
+;;; represented by a symbol. For example, (def-class A) creates a class with
+;;; name 'A.
+;;;
+;;; Each class is itself represented as an hash-table. Each class stores its own
+;;; name (with key 'CLASS), its direct super-classes (with key 'SUPER-CLASSES)
+;;; and its slots (with key 'SLOTS).
 (defvar *classes* (make-hash-table))
 
 ;;;-----------------------------------------------------------------------------
+;;; Print tools
 
 (defun print-hash-entry (key value)
   (format t "(~S . ~S)~%" key value))
@@ -28,12 +36,12 @@
            *classes*))
 
 ;;;-----------------------------------------------------------------------------
+;;; Utility tools for the creation of names for constructors and methods.
 
 (defun make-name (&rest strings)
   (intern (string-upcase (apply #'concatenate
                                 'string
-                                (mapcar #'string
-                                        strings)))))
+                                (mapcar #'string strings)))))
 
 (defun make-constructor-name (constructor-name)
   (make-name "make-" (string constructor-name)))
@@ -46,31 +54,44 @@
 
 ;;;-----------------------------------------------------------------------------
 ;;; Reflection
+;;;
+;;; Here we have methods that manipulate or query the *classes* hash-table.
 
 (defun set-slots! (class slots)
+  "Sets the slots of CLASS, an hash-table (a class, not an instance!) to SLOTS,
+a list of symbols."
   (setf (gethash 'SLOTS (gethash class *classes*)) slots))
 
 (defun set-class! (class)
+  "Inserts a new class with name CLASS (a symbol) in *classes*."
   (progn
     (setf (gethash class *classes*) (make-hash-table))
     (setf (gethash 'CLASS
                    (gethash class *classes*)) class)))
 
-(defun set-super-classes! (class direct-super-classes)
+(defun set-super-classes! (class super-classes)
+  "Sets the super-classes of the class with name CLASS (a symbol) to
+SUPER-CLASSES (a list of symbols)."
   (setf (gethash 'SUPER-CLASSES
                  (gethash class *classes*))
-        direct-super-classes))
+        super-classes))
 
-(defun get-class (class-name)
-  (gethash class-name *classes*))
+(defun get-class (class)
+  "Returns the class (an hash-table) of the class with name CLASS-NAME (a
+symbol)."
+  (gethash class *classes*))
 
 (defun get-class-name (class)
+  "Returns the name (a symbol) of the class CLASS (an hash-table)."
   (gethash 'CLASS class))
 
-(defun get-direct-super-classes (class-name)
-  (gethash 'SUPER-CLASSES (get-class class-name)))
+(defun get-direct-super-classes (class)
+  "Returns the names of the first-level super-classes (a list of symbols) of
+the class with name CLASS (a symbol)."
+  (gethash 'SUPER-CLASSES (get-class class)))
 
 (defun get-class-hierarchy-with-duplicates (class-name)
+  "Same as get-class-hierarchy but possibly with duplicates."
   (let ((direct-super-classes (get-direct-super-classes class-name)))
     (append direct-super-classes
             (if (null direct-super-classes)
@@ -78,17 +99,25 @@
                 (apply #'append (mapcar #'get-class-hierarchy-with-duplicates
                                         direct-super-classes))))))
 
-(defun get-class-hierarchy (class-name)
-  (remove-duplicates (get-class-hierarchy-with-duplicates class-name)))
+(defun get-class-hierarchy (class)
+  "Returns the names of all the super-classes (a list of symbols) of the class
+with name CLASS (a symbol)."
+  (remove-duplicates (get-class-hierarchy-with-duplicates class)))
 
 (defun get-slots (class)
-  (gethash 'SLOTS (gethash class *classes*))
-  )
+  "Returns the names of the slots (a list of symbols) of the class with name
+CLASS (a symbol)."
+  (gethash 'SLOTS (gethash class *classes*)))
 
 (defun get-super-classes-slots (class)
+  "Returns the names of the slots (a list of symbols) of all the super-classes
+of the class with name CLASS (a symbol)."
   (apply #'append (mapcar #'get-slots (get-class-hierarchy class))))
 
 (defun get-all-slots (class)
+  "Returns the names of the slots (a list of symbols) of all the classes in the
+hierarchy of the class with name CLASS (a symbol), i.e., the slots of CLASS plus
+the slots of its super-classes."
   (append (get-slots class)
           (get-super-classes-slots class)))
 
