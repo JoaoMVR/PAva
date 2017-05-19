@@ -102,15 +102,20 @@ the slots of its super-classes."
   `(list ',unbound-slot ,unbound-slot))
 
 (defun make-slots-alist (unbound-slots)
+  "As make-slots, but for an alist instead of an hash-table."
   (cons 'list (mapcar #'make-slot-pair unbound-slots)))
 
 (defun make-slots (unbound-slots)
+  "Generates code for the creation of the slots data structure (an hash-table)
+of an instance of a class. See make-constructor."
   `(let ((slots-ht (make-hash-table)))
      (loop for (key . value) in ,(make-slots-alist unbound-slots) do
        (setf (gethash key slots-ht) (car value)))
      slots-ht))
 
 (defun make-constructor (unbound-class unbound-slots)
+  "Helper function to create the class constructor. A class instance is
+represented by an hash-table that stores its class name and slots."
   `(defun ,(make-constructor-name unbound-class) (&key ,@unbound-slots)
      (let ((self (make-hash-table)))
        (progn
@@ -120,11 +125,16 @@ the slots of its super-classes."
          self))))
 
 (defun make-getter (unbound-class)
+  "Helper function to create the getters. The generated method simply queries
+the instance's inner slots."
   #'(lambda (unbound-slot)
       `(defun ,(make-getter-name unbound-class unbound-slot) (self)
          (gethash ',unbound-slot (gethash 'slots self)))))
 
 (defun make-recognizer (unbound-class)
+  "Helper function to create the recognizers. The generated methods start by
+checking if the argument is of the correct type. Returns true if yes, and
+returns if any of its super-classes has the correct type, if not."
   `(defun ,(make-recognizer-name unbound-class) (obj)
      (when (hash-table-p obj)
        (let ((class-name (get-class-name obj)))
