@@ -1,9 +1,3 @@
-;;; FIXME:
-;;; 1. We should make clearer in the code when we're manipulating class names
-;;;    (of type symbol) and classes (of type hash-table).
-;;; 2. What do we do if we apply a method that is not defined for a certain
-;;;    class?
-
 ;;;-----------------------------------------------------------------------------
 ;;; The class system implementation is structured as follows: classes are
 ;;; organized in a hash-table, *classes* indexed by class name. A class name is
