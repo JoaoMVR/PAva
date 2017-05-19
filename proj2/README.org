@@ -1,11 +1,11 @@
 * TODO
 
-- [-] Class definitions
+- [X] Class definitions
   - [X] constructor
-  - [ ] getters
-  - [ ] recognizer
-- [ ] Inheritance
-  - [ ] Slot inheritance
-  - [ ] Subtyping
-  - [ ] Multiple inheritance
+  - [X] getters
+  - [X] recognizer
+- [X] Inheritance
+  - [X] Slot inheritance
+  - [X] Subtyping
+  - [X] Multiple inheritance
 
