@@ -10,26 +10,6 @@
 (defvar *classes* (make-hash-table))
 
 ;;;-----------------------------------------------------------------------------
-;;; Print tools
-
-(defun print-hash-entry (key value)
-  (format t "(~S . ~S)~%" key value))
-
-(defun print-hash-table (hash-table)
-  (maphash #'print-hash-entry hash-table))
-
-(defun print-classes ()
-  (print-hash-table *classes*))
-
-(defun print-everything ()
-  (print-classes)
-
-  (maphash (lambda (key value)
-             (format t "~%")
-             (print-hash-table value))
-           *classes*))
-
-;;;-----------------------------------------------------------------------------
 ;;; Utility tools for the creation of names for constructors and methods.
 
 (defun make-name (&rest strings)
@@ -116,6 +96,7 @@ the slots of its super-classes."
           (get-super-classes-slots class)))
 
 ;;;-----------------------------------------------------------------------------
+;;; Helper functions for the class definition macro
 
 (defun make-slot-pair (unbound-slot)
   `(list ',unbound-slot ,unbound-slot))
@@ -130,13 +111,13 @@ the slots of its super-classes."
      slots-ht))
 
 (defun make-constructor (unbound-class unbound-slots)
-    `(defun ,(make-constructor-name unbound-class) (&key ,@unbound-slots)
-       (let ((self (make-hash-table)))
-         (progn
-           (setf (gethash 'CLASS self) ',unbound-class)
-           (setf (gethash 'SLOTS self)
-                 ,(make-slots unbound-slots))
-           self))))
+  `(defun ,(make-constructor-name unbound-class) (&key ,@unbound-slots)
+     (let ((self (make-hash-table)))
+       (progn
+         (setf (gethash 'CLASS self) ',unbound-class)
+         (setf (gethash 'SLOTS self)
+               ,(make-slots unbound-slots))
+         self))))
 
 (defun make-getter (unbound-class)
   #'(lambda (unbound-slot)
@@ -153,6 +134,10 @@ the slots of its super-classes."
                    thereis (eql super-class-name ',unbound-class)))))))
 
 (defun make-metaclass! (unbound-class unbound-super-classes unbound-slots)
+  "Defines all the necessary information about a class and stores it in
+*classes*. That information can be later retrieved by the \"reflection\" functions
+described up in the file. It can be seen as a trivial implementation of
+metaclasses."
   (let* ((class         (make-name unbound-class))
          (super-classes (mapcar #'make-name unbound-super-classes))
          (slots         (mapcar #'make-name unbound-slots)))
@@ -161,7 +146,13 @@ the slots of its super-classes."
       (set-super-classes! class super-classes)
       (set-slots! class slots))))
 
+;;;-----------------------------------------------------------------------------
+;;; Class definition
+
 (defmacro def-class (unbound-classes &rest unbound-slots)
+  "Class definition. If UNBOUND-CLASSES is a list then it is a definition with
+inheritance; otherwise it's just a simple class. UNBOUND-SLOTS are the slots to
+be of the class."
   (let* ((unbound-class         (if (listp unbound-classes)
                                     (car unbound-classes)
                                     unbound-classes))
